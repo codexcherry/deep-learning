@@ -1,0 +1,35 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(-10, 10, 100)
+
+# Activation functions using only mathematical formulas
+activations = [
+    ("Sigmoid", 1/(1+np.exp(-x))),
+    ("Tanh", (np.exp(x)-np.exp(-x))/(np.exp(x)+np.exp(-x))),
+    ("ReLU", x*(x>0)),
+    ("LeakyReLU", np.maximum(0.01*x, x)),
+    ("ELU", np.where(x>0, x, 0.01*(np.exp(x)-1))),
+    ("Swish", x/(1+np.exp(-x)))
+]
+
+# Plotting
+plt.figure(figsize=(15, 10))
+for i, (name, y) in enumerate(activations, 1):
+    plt.subplot(2, 3, i)
+    plt.plot(x, y)
+    plt.title(name)
+    plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Softmax using formula
+plt.figure(figsize=(8, 6))
+softmax = np.vstack([np.exp(x), np.exp(x/2), np.exp(x/3)])
+softmax = softmax / softmax.sum(axis=0)
+for i in range(3):
+    plt.plot(x, softmax[i], label=f'Output {i+1}')
+plt.title("Softmax")
+plt.legend()
+plt.grid(True)
+plt.show()
