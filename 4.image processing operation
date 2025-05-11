@@ -1,58 +1,44 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from google.colab.patches import cv2_imshow
 
-# Load image
-original_img = cv2.imread('image.jpg')
-original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+# Load and convert image
+img = cv2.imread('image.jpg')
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 # 1. Histogram Equalization
-gray_img = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY)
-equalized_img = cv2.equalizeHist(gray_img)
+equalized = cv2.equalizeHist(gray)
 
 # 2. Thresholding
-_, binary_threshold_img = cv2.threshold(gray_img, 127, 255, cv2.THRESH_BINARY)
+_, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
 
 # 3. Edge Detection
-edge_detection_img = cv2.Canny(gray_img, 100, 200)
+edges = cv2.Canny(gray, 100, 200)
 
-# 4. Morphological Operations
+# 4. Morphological Operation (Closing - dilation followed by erosion)
 kernel = np.ones((5,5), np.uint8)
-eroded_img = cv2.erode(gray_img, kernel)
-dilated_img = cv2.dilate(gray_img, kernel)
+morph = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
 
 # 5. Data Augmentation
-datagen = ImageDataGenerator(
-    rotation_range=20,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    zoom_range=0.2,
-    horizontal_flip=True
-)
-augmented_img = next(datagen.flow(np.expand_dims(original_img, 0), batch_size=1))[0].astype('uint8')
+datagen = ImageDataGenerator(rotation_range=20, zoom_range=0.2)
+augmented = next(datagen.flow(np.expand_dims(img, 0), batch_size=1))[0].astype('uint8')
 
-# Display results with descriptive titles
-print("Original Image")
-cv2_imshow(original_img)
+# Display results
+plt.figure(figsize=(15, 8))
+titles = ['Original', 'Histogram Equalization', 'Thresholding', 
+          'Edge Detection', 'Morphological Closing', 'Augmented']
+images = [img, equalized, threshold, edges, morph, augmented]
 
-print("\nGrayscale Image")
-cv2_imshow(gray_img)
+for i in range(6):
+    plt.subplot(2, 3, i+1)
+    if i != 5:  # All except augmented are grayscale
+        plt.imshow(images[i], cmap='gray' if i > 0 else None)
+    else:
+        plt.imshow(images[i])
+    plt.title(titles[i])
+    plt.axis('off')
 
-print("\nHistogram Equalized Image")
-cv2_imshow(equalized_img)
-
-print("\nBinary Threshold Image (127 threshold)")
-cv2_imshow(binary_threshold_img)
-
-print("\nEdge Detection (Canny)")
-cv2_imshow(edge_detection_img)
-
-print("\nEroded Image")
-cv2_imshow(eroded_img)
-
-print("\nDilated Image")
-cv2_imshow(dilated_img)
-
-print("\nAugmented Image (Random Transformation)")
-cv2_imshow(augmented_img)
+plt.tight_layout()
+plt.show()
