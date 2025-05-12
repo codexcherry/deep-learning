@@ -1,35 +1,16 @@
 import numpy as np
+from sklearn.linear_model import Perceptron
 
-def perceptron_predict(inputs, weights, bias):
-    """Predict output using perceptron"""
-    weighted_sum = np.dot(inputs, weights) + bias
-    return 1 if weighted_sum >= 0 else 0
+X = np.array([[1,0,1], [0,1,1], [1,1,0], [0,0,1], [1,1,1]])  # Inputs
+y = np.array([1, 1, 1, 0, 0])  # Labels
 
-# Training data: [favorite_hero, favorite_heroine, good_climate], expected_output
-dataset = [
-    ([1, 1, 1], 1),  # All conditions favorable
-    ([1, 1, 0], 1),   # Hero and heroine favorable
-    ([1, 0, 1], 0),   # Hero and climate favorable
-    ([1, 0, 0], 0),   # Only hero favorable
-    ([0, 1, 1], 1),   # Heroine and climate favorable
-    ([0, 1, 0], 0),   # Only heroine favorable
-    ([0, 0, 1], 0),   # Only climate favorable
-    ([0, 0, 0], 0)    # No conditions favorable
-]
+model = Perceptron()
+model.fit(X, y)
 
-weights = np.array([0.2, 0.4, 0.2])
-bias = -0.5
-threshold = 8  # Not used directly in perceptron logic
+model.coef_ = np.array([[0.2, 0.4, 0.2]])  # Must be 2D array
+model.intercept_ = np.array([-0.5])         # Must be 1D array
 
-print("Inputs\t\tPredicted\tExpected\tDecision")
-correct = 0
+y_pred = model.predict(X)
 
-for inputs, expected in dataset:
-    inputs_arr = np.array(inputs)
-    predicted = perceptron_predict(inputs_arr, weights, bias)
-    correct += (predicted == expected)
-    decision = "Go to movie" if predicted == 1 else "Don't go"
-    print(f"{inputs}\t{predicted}\t\t{expected}\t\t{decision}")
-
-accuracy = (correct / len(dataset)) * 100
-print(f"\nModel Accuracy: {accuracy:.2f}%")
+print("Predictions:", y_pred)
+print("Accuracy:", model.score(X, y) * 100, "%")
