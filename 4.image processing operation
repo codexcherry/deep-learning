@@ -1,44 +1,22 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-# Load and convert image
-img = cv2.imread('image.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+img = cv2.imread(r'image.jpg', 0)
+ops = [
+    ('Original', img),
+    ('Equalized', cv2.equalizeHist(img)),
+    ('Thresholded', cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)[1]),
+    ('Edges', cv2.Canny(img, 100, 200)),
+    ('Flipped', cv2.flip(img, 2)),
+    ('Morphological', cv2.morphologyEx(img, cv2.MORPH_CLOSE, np.ones((5,5), np.uint8)))
+]
 
-# 1. Histogram Equalization
-equalized = cv2.equalizeHist(gray)
-
-# 2. Thresholding
-_, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-
-# 3. Edge Detection
-edges = cv2.Canny(gray, 100, 200)
-
-# 4. Morphological Operation (Closing - dilation followed by erosion)
-kernel = np.ones((5,5), np.uint8)
-morph = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
-
-# 5. Data Augmentation
-datagen = ImageDataGenerator(rotation_range=20, zoom_range=0.2)
-augmented = next(datagen.flow(np.expand_dims(img, 0), batch_size=1))[0].astype('uint8')
-
-# Display results
-plt.figure(figsize=(15, 8))
-titles = ['Original', 'Histogram Equalization', 'Thresholding', 
-          'Edge Detection', 'Morphological Closing', 'Augmented']
-images = [img, equalized, threshold, edges, morph, augmented]
-
-for i in range(6):
+plt.figure(figsize=(12, 6))
+for i, (title, image) in enumerate(ops):
     plt.subplot(2, 3, i+1)
-    if i != 5:  # All except augmented are grayscale
-        plt.imshow(images[i], cmap='gray' if i > 0 else None)
-    else:
-        plt.imshow(images[i])
-    plt.title(titles[i])
+    plt.imshow(image, cmap='gray')
+    plt.title(title)
     plt.axis('off')
-
 plt.tight_layout()
 plt.show()
