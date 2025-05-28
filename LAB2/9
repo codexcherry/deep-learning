@@ -1,40 +1,35 @@
-import tensorflow as tf
-import matplotlib.pyplot as plt
+# Import necessary libraries
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Input, Flatten, Dense, BatchNormalization, Dropout
+from tensorflow.keras.datasets import mnist
 
-# 1. Load and prepare data
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-x_train, x_test = x_train / 255.0, x_test / 255.0  # Normalize to [0,1]
+# Load and preprocess the MNIST dataset
+(x_tr, y_tr), (x_ts, y_ts) = mnist.load_data()
+x_tr, x_ts = x_tr / 255.0, x_ts / 255.0
 
-# 2. Build model with BatchNorm and Dropout
-model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape=(28, 28)),
-    tf.keras.layers.Dense(128),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Dropout(0.3),
-    tf.keras.layers.Dense(10, activation='softmax')
+# Build the model
+m = Sequential([
+    Flatten(input_shape=(28, 28)),
+    BatchNormalization(),
+    Dropout(0.2),
+    Dense(64, activation='relu'),
+    BatchNormalization(),
+    Dropout(0.2),
+    Dense(10, activation='softmax')
 ])
 
-# 3. Compile and train
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
+# Compile the model
+m.compile(optimizer='adam',
+          loss='sparse_categorical_crossentropy',
+          metrics=['accuracy'])
 
-history = model.fit(x_train, y_train, 
-                    epochs=5, 
-                    validation_data=(x_test, y_test))
+# Train the model
+m.fit(x_tr, y_tr, epochs=10, batch_size=32, validation_data=(x_ts, y_ts))
 
-# 4. Evaluate
-test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
-print(f"\nTest accuracy: {test_acc:.4f}")
+# Evaluate the model
+tr_loss, tr_acc = m.evaluate(x_tr, y_tr)
+ts_loss, ts_acc = m.evaluate(x_ts, y_ts)
 
-# 5. Visualize predictions
-plt.figure(figsize=(10,4))
-for i in range(5):
-    plt.subplot(1,5,i+1)
-    plt.imshow(x_test[i], cmap='gray')
-    pred = model.predict(x_test[i:i+1], verbose=0)[0]
-    plt.title(f"Pred: {tf.argmax(pred)}\nTrue: {y_test[i]}")
-    plt.axis('off')
-plt.tight_layout()
-plt.show()
+# Print results
+print("Train loss:", tr_loss, "Train Accuracy:", tr_acc)
+print("Test loss:", ts_loss, "Test Accuracy:", ts_acc)
