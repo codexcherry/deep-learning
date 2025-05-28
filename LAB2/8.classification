@@ -1,0 +1,21 @@
+import numpy as np, pandas as pd, tensorflow as tf
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+
+# Load and preprocess
+df = pd.read_csv('Sonar.csv')
+x = df.iloc[:,:-1].values
+y = pd.get_dummies(df.iloc[:,-1]).iloc[:,1].values
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=1)
+
+# Build and train
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(60, activation='relu'), tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(30, activation='relu'), tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(1, activation='sigmoid')
+])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=100, batch_size=8, verbose=0)
+
+# Evaluate
+print(classification_report(y_test, np.round(model.predict(x_test))))
