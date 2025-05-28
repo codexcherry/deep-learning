@@ -1,45 +1,28 @@
-import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
 
-def apply_learning_rule(rule_name, input_pattern, weights, target=None, learning_rate=0.1):
-    if rule_name == "hebbian":
-        return weights + np.outer(input_pattern, input_pattern)
-    
-    elif rule_name == "perceptron":
-        prediction = np.dot(weights, input_pattern)
-        return weights + learning_rate * (target - prediction) * input_pattern
-    
-    elif rule_name == "delta":
-        prediction = np.dot(weights, input_pattern)
-        return weights + learning_rate * np.outer((target - prediction), input_pattern)
-    
-    elif rule_name == "correlation":
-        return weights + np.outer(input_pattern, input_pattern)
-    
-    elif rule_name == "outstar":
-        return weights + learning_rate * np.outer(input_pattern, input_pattern)
+# Load and preprocess MNIST
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train, x_test = x_train[..., None]/255.0, x_test[..., None]/255.0  # Normalize and reshape
 
-# Initialize parameters
-input_size = 3
-input_pattern = np.array([0.2, 0.5, 0.8])
-target = 1
-learning_rate = 0.1
+# Build CNN model
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(28,28,1)),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
 
-# Create and update all weights in a loop
-rules = ["hebbian", "perceptron", "delta", "correlation", "outstar"]
-results = {}
+# Compile and train
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=3)
 
-for rule in rules:
-    # Initialize weights (1D for perceptron, 2D for others)
-    weights = np.random.rand(input_size) if rule == "perceptron" else np.random.rand(input_size, input_size)
-    
-    # Store initial and updated weights
-    results[rule] = {
-        "initial": weights.copy(),
-        "updated": apply_learning_rule(rule, input_pattern, weights, target, learning_rate)
-    }
+# Evaluate
+model.evaluate(x_test, y_test)
 
-# Display results
-for rule, data in results.items():
-    print(f"\n{rule.capitalize()} Rule:")
-    print("Initial weights:\n", data["initial"])
-    print("Updated weights:\n", data["updated"])
+for i in range(2):
+    pred = model.predict(x_test[:i+1])
+    plt.imshow(x_test[i].reshape(28, 28), cmap='gray')
+    plt.title(f"Predicted: {tf.argmax(pred[i]).numpy()}")
+    plt.axis('off')
+    plt.show()
