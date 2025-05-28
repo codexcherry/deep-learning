@@ -1,0 +1,26 @@
+import tensorflow as tf
+import numpy as np
+
+# 1. Prepare data
+text = "hello world hello universe"
+tokenizer = tf.keras.preprocessing.text.Tokenizer(); tokenizer.fit_on_texts([text])
+seq = tokenizer.texts_to_sequences([text])[0]
+X = [seq[:i] for i in range(1, len(seq))]
+y = tf.keras.utils.to_categorical(seq[1:], len(tokenizer.word_index)+1)
+X = tf.keras.preprocessing.sequence.pad_sequences(X, maxlen=len(seq)-1)
+
+# 2. Build/train model
+model = tf.keras.Sequential([
+    tf.keras.layers.Embedding(len(tokenizer.word_index)+1, 10),
+    tf.keras.layers.SimpleRNN(20),
+    tf.keras.layers.Dense(len(tokenizer.word_index)+1, activation='softmax')
+])
+model.compile(optimizer='adam', loss='categorical_crossentropy')
+model.fit(X, y, epochs=100, verbose=0)
+
+# 3. Predict
+def predict_next(t): return tokenizer.index_word[np.argmax(
+    model.predict(tf.keras.preprocessing.sequence.pad_sequences(
+        [tokenizer.texts_to_sequences([t])[0]], maxlen=len(X[0])), verbose=0)[0])]
+
+print(predict_next("hello"))  # Output: "world"
